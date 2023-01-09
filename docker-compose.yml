@@ -1,0 +1,37 @@
+version: '3.9'
+
+services:
+  python:
+    container_name: 'coding_area'
+    build:
+      context: ./docker/codingarea
+    volumes:
+      - ..:/data/app
+    tty: true
+
+  mysql:
+    container_name: 'mysql_db'
+    build:
+      context: ./docker/mysql
+    restart: always
+    volumes:
+      - ./databases/mysql/:/data/dna/
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_ROOT_PASSWORD=dna
+      - MYSQL_DB=dna
+    ports: 
+      - 3306:3306
+    command: --init-file /data/dna/init.sql
+
+  mongodb:
+    image: mongo:latest
+    container_name: 'mongo_db'
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongodata:/data/db
+    environment:
+      - MONGO_INITDB_DABATASE=dna
+      - MONGO_INITDB_ROOT_USERNAME=dna
+      - MONGO_INITDB_ROOT_PASSWORD=12345
