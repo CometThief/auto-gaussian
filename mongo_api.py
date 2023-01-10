@@ -69,7 +69,7 @@ def visualize_contents(DB = None, COLLECTION = None):
 
     return col_df
 
-def grab_smiles(DB_NAME, COLLECTION = 'smiles ' + time.strftime("%Y%m%d-%H%M%S"), maxemptyiterations=1000):
+def grab_smiles(DB_NAME, COLLECTION = 'smiles ' + time.strftime("%Y%m%d-%H%M%S"), maxemptyiterations=20):
 
     #first we fetch all files in the download directory
     allfiles = set()
@@ -87,11 +87,11 @@ def grab_smiles(DB_NAME, COLLECTION = 'smiles ' + time.strftime("%Y%m%d-%H%M%S")
                 if file.endswith(".smi"):
                     allfiles.add(os.path.join(dir, file))
             if not allfiles:
-                print('The smiles directory is empty')
+                #print('The smiles directory is empty')
                 iterations += 1
                 time.sleep(5)
         else:
-            for i in tqdm(allfiles):
+            for i in allfiles:
                 tranche = i[-10:]
                 with open(i, 'r') as file:
                     for e in file:
@@ -151,9 +151,11 @@ def subsearch(DB_NAME, COLLECTION, substructs = pd.DataFrame(
             'name': ['carbonyl'],
             'smiles': ['C=O']
         }
-    ) , showall=False):
+    ) , newname = None, showall=False):
 
-    newname = 'subsearch ' + time.strftime("%Y%m%d-%H%M%S")
+    if not newname:
+        newname = 'subsearch ' + time.strftime("%Y%m%d-%H%M%S")
+
     substructs['rdkit molecule'] = substructs['smiles'].apply(Chem.MolFromSmiles)
 
     #mols = list(substructs['rdkit molecule'])
@@ -172,16 +174,28 @@ def subsearch(DB_NAME, COLLECTION, substructs = pd.DataFrame(
     for index, row in tqdm(col.iterrows(), total=col.shape[0]):
         mol = Chem.MolFromSmiles(row['smiles_chain'])
         match = False
+        substructmatches = list()
         for _, substruct in substructs.iterrows():
             if mol.HasSubstructMatch(substruct['rdkit molecule']):
+                substructmatches.append(substruct['name'])
+                '''
                 matches.append(
                     {
                         'zinc_id': row['zinc_id'],
-                        'smiles': row['smiles_chain'],
+                        'smiles_chain': row['smiles_chain'],
                         'substructure match': substruct['name']
                     }
                 )
+                '''
                 match = True
+        if match == True:
+            matches.append(
+                    {
+                        'zinc_id': row['zinc_id'],
+                        'smiles_chain': row['smiles_chain'],
+                        'substructure match': substructmatches
+                    }
+                )
         #if not match:
             #no_matches.append(index)
 
@@ -201,13 +215,14 @@ def subsearch(DB_NAME, COLLECTION, substructs = pd.DataFrame(
         print('\nNo values matched the filters\n')
 
 
-def sizefilter(DB_NAME, COLLECTION, min = 3, max = 7):
+def sizefilter(DB_NAME, COLLECTION, min = 3, max = 7, newname = None):
 
     db = client[DB_NAME]
     collection = db[COLLECTION]
     filtered = []
-    newname = 'Size filter from ({collection}): > {min} ; < {max}  {date}'.format(
-        collection=COLLECTION, min=min, max=max, date=time.strftime("%Y%m%d-%H%M%S"))
+    if not newname:
+        newname = 'Size filter from ({collection}): > {min} ; < {max}  {date}'.format(
+            collection=COLLECTION, min=min, max=max, date=time.strftime("%Y%m%d-%H%M%S"))
 
     filtercursor = collection.find( {'$and': [
         { 'maxdist': { '$gt': min } },
@@ -221,14 +236,15 @@ def sizefilter(DB_NAME, COLLECTION, min = 3, max = 7):
     print('Total number of molecules that fit the size criteria: ', len(filtered))
 
 
-def atomfilter(DB_NAME, COLLECTION, contains=(6,7,8)):
+def atomfilter(DB_NAME, COLLECTION, contains, newname = None):
     #, exclude=range(min,max)
 
     db = client[DB_NAME]
     collection = db[COLLECTION]
-    newcollection = '{contains} Atom filter from ({COLLECTION})  {DATE}'.format(
-        contains=contains, COLLECTION=COLLECTION, DATE=time.strftime("%Y%m%d-%H%M%S")
-    )
+    if not newname:
+        newname = '{contains} Atom filter from ({COLLECTION})  {DATE}'.format(
+            contains=contains, COLLECTION=COLLECTION, DATE=time.strftime("%Y%m%d-%H%M%S")
+        )
 
     print('\nFiltering from {DB_NAME} - {COLLECTION}:'.format(
         DB_NAME=DB_NAME, COLLECTION=COLLECTION
@@ -246,7 +262,7 @@ def atomfilter(DB_NAME, COLLECTION, contains=(6,7,8)):
 
     if results:
         print('{length} values met the criteria'.format(length = len(results)))
-        insert(DB_NAME, newcollection, results)
+        insert(DB_NAME, newname, results)
     else: 
         print('\nNo values met the criteria')
 

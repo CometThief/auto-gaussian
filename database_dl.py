@@ -6,12 +6,14 @@ import zlib
 import json
 import sys
 from tqdm import tqdm
+import mongo_api as mapi
+import multiprocessing
 
 def pause():
     input('@@@ Press enter to continue: ')
 
 #fetches all tranches
-def fetch_zinc(rep="3D", since="", db_r="", format="smi",using="uri"):
+def fetch_zinc(rep="3D", since="", db_r="", format="smi",using="uri", DB_NAME = 'Zinc15', COLLECTION='Zinc15 Universe'):
     all_3d_url = "https://zinc.docking.org/tranches/all3D.json"
     download_url = "https://zinc.docking.org/tranches/download"
     r = requests.get(all_3d_url)
@@ -25,20 +27,28 @@ def fetch_zinc(rep="3D", since="", db_r="", format="smi",using="uri"):
     }
 
     r = requests.post(download_url, data=data, stream=True)
+    
+    #multiprocessing the download and then set up of local database
+    #print(r.text)
+    process_1 = multiprocessing.Process(target=open_mol2, args=(r, DB_NAME, COLLECTION))
+    process_1.start()
 
-    open_mol2(r)
+    #open_mol2(r)
+    #mapi.grab_smiles('Zinc15', 'Zinc15 Universe')
+    
 
 #takes list of tranches and treats them individually
-def open_mol2(r, WORKING_DIR='./tranches/'):
+def open_mol2(r, DB_NAME, COLLECTION, WORKING_DIR='./tranches/'):
 
     os.makedirs(WORKING_DIR, exist_ok=True)
 
-    #the '0_' is so the 2 files line up at the top of the directory
+    #the '0_' is so the 2 files line up at the top of the 
+
     with open(WORKING_DIR + '0_alltranches', 'w') as a:
         total = r.text
         a.write(total)
         total = len(str(total).split('\n'))
-
+    
     try:
         with open(WORKING_DIR + '0_finished_tranches', 'r') as all_file:
             done_list = set(all_file.read().split())
@@ -46,6 +56,9 @@ def open_mol2(r, WORKING_DIR='./tranches/'):
         done_list = set()
 
     print('Downloading tranches')
+
+    process_2 = multiprocessing.Process(target=mapi.grab_smiles, args=(DB_NAME, COLLECTION))
+    process_2.start()
 
     for x in tqdm(r.iter_lines(), total=total):
 
@@ -78,11 +91,11 @@ def open_mol2(r, WORKING_DIR='./tranches/'):
             #writes to a file with a list of correctly downloaded tranches
             with open(WORKING_DIR + '0_finished_tranches', 'a') as f:
                 f.write(str(x) + '\n')
-
+        
         #else:
             #print('Current tranche: ', x[36:42],
             #'Status: already downloaded', end="\r")
-
+    
     done_list.close()
 
 #future function for gz file handling
