@@ -83,7 +83,7 @@ import mongo_api as mapi
 mapi.visualize_contents()
 ```
 
-####Output
+#### Output
 
 ```bash
 python3.py example.py
@@ -111,7 +111,7 @@ import mongo_api as mapi
 mapi.visualize_contents()
 ```
 
-####Output
+#### Output
 
 ```text
 'name': 'Zinc15', 'sizeOnDisk': XXXXX, 'empty': False
@@ -128,7 +128,7 @@ import mongo_api as mapi
 mapi.visualize_contents('Zinc15')
 ```
 
-####Output
+#### Output
 
 ```text
 Collections in Zinc15:
@@ -144,7 +144,7 @@ import mongo_api as mapi
 mapi.visualize_contents('Zinc15', 'Zinc15 Universe')
 ```
 
-####Output
+#### Output
 
 ```text
 Total number of documents in (Zinc15 Universe): XXXXX
@@ -159,7 +159,7 @@ collection = mapi.visualize_contents('Zinc15', 'Zinc15 Universe')
 print(collection)
 ```
 
-####Output
+#### Output
 
 ```text
 Total number of documents in (Zinc15 Universe): 84116
@@ -200,7 +200,7 @@ mapi.sizefilter('Zinc15', 'Zinc15 Universe', min=3, max=7)
 mapi.visualize_contents('Zinc15')
 ```
 
-####Output
+#### Output
 
 ```text
 Collections in Zinc15:
@@ -218,7 +218,7 @@ collection = mapi.visualize_contents('Zinc15', 'Test01')
 print(collection)
 ```
 
-####Output
+#### Output
 
 ```text
 Total number of molecules that fit the size criteria:  16616
@@ -256,7 +256,7 @@ collection = mapi.visualize_contents('Zinc15', 'Test02')
 print(collection)
 ```
 
-####Output
+#### Output
 
 ```text
 13187 values met the criteria
@@ -299,7 +299,7 @@ collection = mapi.visualize_contents('Zinc15', 'Test03')
 print(collection)
 ```
 
-####Output
+#### Output
 
 ```text
 12104 molecules match the filters
@@ -333,7 +333,7 @@ import mongo_api as mapi
 mapi.visualize_contents('Zinc15')
 ```
 
-####Output
+#### Output
 
 ```text
 Collections in Zinc15:
@@ -353,7 +353,7 @@ mapi.rm_collection('Zinc15', 'Test03')
 mapi.visualize_contents('Zinc15')
 ```
 
-####Output
+#### Output
 
 ```text
 Collections in Zinc15:
@@ -371,7 +371,7 @@ import mongo_api as mapi
 mapi.rm_db('Zinc15')
 ```
 
-####Output
+#### Output
 
 ```text
 'name': 'admin', 'sizeOnDisk': 102400, 'empty': False
